@@ -1,0 +1,95 @@
+pool: mama
+
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+  paths:
+    include:
+      - env/dev/**
+
+stages:
+- stage: terraformInitAndValidate
+  displayName: Terraform Init And Validate
+  jobs:
+  - job: terraform_InitAndValidate
+    displayName: Terraform Init And Validate
+    steps:
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: azurerm
+        command: init
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        backendServiceArm: 'mama-infra'
+        backendAzureRmResourceGroupName: 'endpoint'
+        backendAzureRmStorageAccountName: 'endpointstatefile'
+        backendAzureRmContainerName: 'endpointcontainer'
+        backendAzureRmKey: 'dev.endpointcontainer'
+
+    - task: PowerShell@2
+      displayName: 'Check Terraform Provider Version'
+      inputs:
+        targetType: 'inline'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        script: |
+          Write-Host "===== Terraform Version ====="
+          terraform version
+
+          Write-Host "===== Provider Lock File ====="
+          Get-Content .terraform.lock.hcl
+   
+    - task: PowerShell@2
+      displayName: 'Terraform Format Check'
+      inputs:
+        targetType: 'inline'
+        script: |
+          terraform fmt -check -recursive
+        workingDirectory: '$(Build.SourcesDirectory)/env/dev'
+
+
+    - task: TerraformTask@5
+      displayName: Terraform Validate
+      inputs:
+        provider: azurerm
+        command: validate
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        environmentServiceNameAzureRM: 'mama-infra'
+
+    - task: TerraformTask@5
+      displayName: Terraform Plan
+      inputs:
+        provider: azurerm
+        command: plan
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        environmentServiceNameAzureRM: 'mama-infra'
+
+- stage: terraformApply
+  displayName: Terraform Apply
+  dependsOn: terraformInitAndValidate
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+  jobs:
+  - job: terraform_Apply
+    displayName: Terraform Apply
+    steps:
+    - task: TerraformTask@5
+      displayName: Terraform Init
+      inputs:
+        provider: azurerm
+        command: init
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        backendServiceArm: 'mama-infra'
+        backendAzureRmResourceGroupName: 'endpoint'
+        backendAzureRmStorageAccountName: 'endpointstatefile'
+        backendAzureRmContainerName: 'endpointcontainer'
+        backendAzureRmKey: 'dev.endpointcontainer'
+
+    - task: TerraformTask@5
+      displayName: Terraform Apply
+      inputs:
+        provider: azurerm
+        command: apply
+        workingDirectory: '$(System.DefaultWorkingDirectory)/env/dev'
+        environmentServiceNameAzureRM: 'mama-infra'
