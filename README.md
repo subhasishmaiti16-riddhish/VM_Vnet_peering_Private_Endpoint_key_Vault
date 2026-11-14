@@ -1,4 +1,8 @@
 # Azure Infrastructure Automation | Terraform & Azure DevOps
+
+<img width="1027" height="612" alt="image" src="https://github.com/user-attachments/assets/eddd49a6-b187-46e1-a34d-94d067889531" />
+
+
 ## Secure Azure Networking, Private Endpoint & Identity-Based Storage Access
 
 ### Project Overview
@@ -143,4 +147,4 @@ Key automation activities:
 
 #Azure #Terraform #AzureDevOps #CloudInfrastructure #CloudSecurity #PrivateEndpoint #AzureNetworking #VNetPeering #AzureBastion #KeyVault #ManagedIdentity #DevOps #InfrastructureAsCode #CI_CD
 
-<img width="1027" height="612" alt="image" src="https://github.com/user-attachments/assets/eddd49a6-b187-46e1-a34d-94d067889531" />
+
